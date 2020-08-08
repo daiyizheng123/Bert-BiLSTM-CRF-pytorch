@@ -20,8 +20,8 @@ from typing import NamedTuple
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-CRF_MODEL_PATH = '/root/workspace/Bert-BiLSTM-CRF-pytorch/checkpoints/finetuning/100.pt'
-BERT_PATH = '/root/workspace/qa_project/chinese_L-12_H-768_A-12'
+CRF_MODEL_PATH = './checkpoints/01/20.pt'
+BERT_PATH = '/home/daiyizheng/.cache/torch/transformers/bert-pretrainmodel/bert/bert-base-chinese'
 
 class CRF(object):
     def __init__(self, crf_model, bert_model, device='cpu'):

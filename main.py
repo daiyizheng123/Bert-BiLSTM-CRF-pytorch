@@ -144,30 +144,19 @@ if __name__=="__main__":
     eval_dataset = NerDataset(hp.validset)
     print('Load Data Done')
 
-    train_iter = data.DataLoader(dataset=train_dataset,
-                                 batch_size=hp.batch_size,
-                                 shuffle=True,
-                                 num_workers=4,
-                                 collate_fn=pad)
-    eval_iter = data.DataLoader(dataset=eval_dataset,
-                                 batch_size=hp.batch_size,
-                                 shuffle=False,
-                                 num_workers=4,
-                                 collate_fn=pad)
+    train_iter = data.DataLoader(dataset=train_dataset, batch_size=hp.batch_size, shuffle=True, num_workers=4, collate_fn=pad)
+    eval_iter = data.DataLoader(dataset=eval_dataset, batch_size=hp.batch_size, shuffle=False, num_workers=4, collate_fn=pad)
 
     optimizer = optim.Adam(model.parameters(), lr = hp.lr)
     criterion = nn.CrossEntropyLoss(ignore_index=0) 
 
     print('Start Train...,')
     for epoch in range(1, hp.n_epochs+1):  # 每个epoch对dev集进行测试
-
         train(model, train_iter, optimizer, criterion, device)
-
         print(f"=========eval at epoch={epoch}=========")
         if not os.path.exists(hp.logdir): os.makedirs(hp.logdir)
         fname = os.path.join(hp.logdir, str(epoch))
         precision, recall, f1 = eval(model, eval_iter, fname, device)
-
         torch.save(model.state_dict(), f"{fname}.pt")
         print(f"weights were saved to {fname}.pt")
 

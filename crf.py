@@ -23,8 +23,7 @@ def argmax(vec):
 def log_sum_exp(vec):
     max_score = vec[0, argmax(vec)]
     max_score_broadcast = max_score.view(1, -1).expand(1, vec.size()[1])
-    return max_score + \
-        torch.log(torch.sum(torch.exp(vec - max_score_broadcast)))
+    return max_score + torch.log(torch.sum(torch.exp(vec - max_score_broadcast)))
 
 def log_sum_exp_batch(log_Tensor, axis=-1): # shape (batch_size,n,m)
     return torch.max(log_Tensor, axis)[0] + \
@@ -37,14 +36,12 @@ class Bert_BiLSTM_CRF(nn.Module):
         self.tagset_size = len(tag_to_ix)
         # self.hidden = self.init_hidden()
         self.lstm = nn.LSTM(bidirectional=True, num_layers=2, input_size=768, hidden_size=hidden_dim//2, batch_first=True)
-        self.transitions = nn.Parameter(torch.randn(
-            self.tagset_size, self.tagset_size
-        ))
+        self.transitions = nn.Parameter(torch.randn(self.tagset_size, self.tagset_size))
         self.hidden_dim = hidden_dim
         self.start_label_id = self.tag_to_ix['[CLS]']
         self.end_label_id = self.tag_to_ix['[SEP]']
         self.fc = nn.Linear(hidden_dim, self.tagset_size)
-        self.bert = BertModel.from_pretrained('/root/workspace/qa_project/chinese_L-12_H-768_A-12')
+        self.bert = BertModel.from_pretrained('/home/daiyizheng/.cache/torch/transformers/bert-pretrainmodel/bert/bert-base-chinese')
         # self.bert.eval()  # 知用来取bert embedding
         
         self.transitions.data[self.start_label_id, :] = -10000
@@ -55,6 +52,10 @@ class Bert_BiLSTM_CRF(nn.Module):
 
 
     def init_hidden(self):
+        """
+        初始化LSTM隐层
+        :return:
+        """
         return (torch.randn(2, 1, self.hidden_dim // 2),
                 torch.randn(2, 1, self.hidden_dim // 2))
 
@@ -94,9 +95,7 @@ class Bert_BiLSTM_CRF(nn.Module):
         score = torch.zeros((feats.shape[0],1)).to(self.device)
         # the 0th node is start_label->start_word,the probability of them=1. so t begin with 1.
         for t in range(1, T):
-            score = score + \
-                batch_transitions.gather(-1, (label_ids[:, t]*self.tagset_size+label_ids[:, t-1]).view(-1,1)) \
-                    + feats[:, t].gather(-1, label_ids[:, t].view(-1,1)).view(-1,1)
+            score = score + batch_transitions.gather(-1, (label_ids[:, t]*self.tagset_size+label_ids[:, t-1]).view(-1,1)) + feats[:, t].gather(-1, label_ids[:, t].view(-1,1)).view(-1,1)
         return score
 
     def _bert_enc(self, x):
